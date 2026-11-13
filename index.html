@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>子どもとのかかわりタイプ診断</title>
+<style>
+:root{--ink:#1f2d3a;--bg:#f2f6fa;--tl:#2a7f78;--ac:#f0b429;--mut:#6b7a89}
+body{margin:0;font:16px/1.7 "Hiragino Maru Gothic ProN","BIZ UDPGothic","Yu Gothic",sans-serif;color:var(--ink);background:var(--bg)}
+main{max-width:560px;margin:0 auto;padding:16px 16px 80px}
+h1{font-size:1.55rem;line-height:1.35;margin:.5em 0}h2{font-size:1.1rem;margin:1em 0 0}
+.c{background:#fff;border:1px solid #dbe4ec;border-radius:14px;padding:14px 16px;margin:12px 0}
+.q p{margin:0 0 8px;font-weight:700}.m{font-size:.85rem;color:var(--mut)}
+.bar{height:6px;background:#dde6ee;border-radius:3px}.bar i{display:block;height:100%;background:var(--tl);border-radius:3px;transition:width .3s}
+.ch{display:flex;flex-wrap:wrap;gap:8px}.sc{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+label{border:1.5px solid #c5d2de;border-radius:999px;padding:6px 14px;cursor:pointer;text-align:center}
+.sc label{padding:8px 0;border-radius:10px}input{position:absolute;opacity:0}
+label:has(input:checked){background:var(--tl);color:#fff;border-color:var(--tl)}
+label:has(input:focus-visible){outline:3px solid var(--ac)}
+.ends{display:flex;justify-content:space-between;font-size:.75rem;color:var(--mut);margin-top:4px}
+button{font:inherit;border:0;border-radius:999px;padding:12px 24px;background:var(--ink);color:#fff;cursor:pointer}
+button.s{background:none;color:var(--ink);border:1.5px solid var(--ink)}
+.nav{display:flex;gap:10px;justify-content:space-between;margin-top:16px}.err{color:#b4412f;min-height:1.6em}
+#card{width:100%;height:auto;border-radius:14px;border:1px solid #dbe4ec}
+</style></head><body><main id="app"></main>
+<script>
+const GAS='';// ← GASのWebアプリURLを貼る
+const CONTACT='（ここに連絡先メールアドレスを入力）';
+const LAB=['まったくそう思わない','非常にそう思う'];
+const COG=['子どもと関わるのは楽しい','子どもの成長を見守ることにやりがいを感じる','子どもと接していると気持ちが和らぐ','子どもの年齢ごとの発達の特徴を、おおよそ理解している','子どもがつまずきやすい場面を予想できる','子どもへの声かけや対応の仕方に見通しがある'];
+const SE=[['子どもとしっかり遊んで、気持ちを満足させられると思う','子どもとしっかり遊んで、気持ちを満足させられる'],['子どもから、よく遊んでくれる楽しい親だと思ってもらえると思う','子どもは、私をよく遊んでくれる楽しい親だと思っている'],['子どもの年齢に合った遊びを、いろいろ教えてあげられると思う','子どもの年齢に合った遊びを、いろいろ教えてあげられる'],['子どもがまねできる良いお手本を見せられると思う','子どもがまねできる良いお手本を見せられる'],['子どもが自信をもてるように、良い所をほめられると思う','子どもが自信をもてるように、良い所をほめられる'],['子どもがぐずった時に、なだめられると思う','子どもがぐずった時に、なだめられる'],['子どもが不安そうな時、言葉をかけて安心させられると思う','子どもが不安そうな時、言葉をかけて安心させられる']];
+const SUP=['困ったときは、周囲の人に助けを求めてよいと思う','他の人に助けを求めることに、あまり抵抗はない','子育てで困ったとき、相談できる人が身近にいると思う','周囲の人は、子育てをしていることに理解を示してくれると思う','育児休業など、子育てに関する制度は積極的に利用したいと思う','子育ての悩みは、専門家（保育士・医師・相談窓口など）に相談したいと思う'];
+const BIR=[['将来、子どもを持ちたいと思う','今後さらに、子どもを持ちたいと思う'],['子どもがいる生活を、具体的に思い描くことができる','子どもがもう一人増えた生活を、具体的に思い描くことができる'],['子どもを持つことは、自分の人生にとって大切なことだと思う','子どもを増やすことは、自分の人生にとって大切なことだと思う'],['子どもを持つことに、不安を感じる','今後さらに子どもを持つことに、不安を感じる'],['自分に子育てができるのか、心配になる','もう一人育てることができるのか、心配になる'],['子どもを持つかどうかを決めるとき、ためらいを感じると思う','子どもを増やすかどうかを決めるとき、ためらいを感じる'],['子育てと仕事の両立は、難しいと思う'],['子育てにかかる経済的な負担は、大きいと思う']];
+const DEF={cog:COG.map(t=>[t]),se:SE,sup:SUP.map(t=>[t]),bir:BIR},SEED={cog:11,se:23,sup:37,bir:41};
+// 軸：[名前,名詞,形容詞,仮の基準値,レーダー表示名,高い時の一言,控えめな時の一言]
+const AX=[['子どもへの親しみ','味方','やさしい',5.0,'親しみ','子どもと過ごす時間そのものを楽しめる人です。','子どもと触れ合うほど、楽しさが見つかりそうです。'],['成長への見通し','先読み','冷静な',3.8,'見通し','子どもの育ちを先まで想像できる人です。','経験を重ねるほど、見通す力が育ちそうです。'],['遊びとお手本の自信','遊びの達人','にぎやかな',4.0,'遊びの自信','遊びで子どもの心をつかめそうな人です。','遊びの引き出しが増えるほど、自信が育ちそうです。'],['ほめて安心させる自信','安心づくり','ほっとさせる',4.2,'安心の自信','ほめて安心させる力を持っている人です。','経験を重ねるほど、安心させる力が育ちそうです。'],['支え合い','つなぎ役','みんなで育てる',4.4,'支え合い','人に頼り、頼られる関係をつくれる人です。','頼れる相手が増えるほど、安心が広がりそうです。']];
+const AXI=[['cog',0,3],['cog',3,6],['se',0,4],['se',4,7],['sup',0,6]];
+const OPT={age:['18〜19歳','20代','30代','40代','50代以上'],gender:['男性','女性','その他','回答しない'],partner:['配偶者がいる','交際相手がいる','いない','回答しない'],group:['教育学部の学生','他学部の学生','現職教員','その他（社会人・一般など）'],child:['いる','いない']};
+const NINF=['0人','1人','2人','3人','4人以上','わからない','答えたくない'],NINP=['0人','1人','2人','3人以上','わからない','答えたくない'];
+const JIF=['すぐにでも（1年以内）','2〜3年以内','4〜5年以内','6年以上先','持ちたくない','わからない','答えたくない'],JIP=['1年以内','2〜3年以内','4〜5年以内','6年以上先','持たない','わからない','答えたくない'];
+const s={a:{},r:{},p:0},$=id=>document.getElementById(id);
+const sh=(n,seed)=>{const a=[...Array(n).keys()];let t=seed;const r=()=>(t=(t*1664525+1013904223)>>>0)/4294967296;for(let i=n-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const q=(k,t,o)=>`<div class="q c"><p>${t}</p><div class="ch">${o.map(v=>`<label><input type="radio" name="${k}" value="${v}"${s.a[k]===v?' checked':''}>${v}</label>`).join('')}</div></div>`;
+const grid=(k,t,P)=>`<h2>${t}</h2>`+sh(DEF[k].length,SEED[k]).map(j=>{const x=DEF[k][j];return `<div class="q c"><p>${P&&x[1]?x[1]:x[0]}</p><div class="sc">${[1,2,3,4,5,6].map(v=>`<label><input type="radio" name="g:${k}:${j}" value="${v}"${(s.r[k]||[])[j]===v?' checked':''}>${v}</label>`).join('')}</div><div class="ends"><span>${LAB[0]}</span><span>${LAB[1]}</span></div></div>`}).join('');
+const stu=()=>['教育学部の学生','他学部の学生'].includes(s.a.group);
+const route=()=>s.a.child==='いる'?'P':stu()?'S':'T';
+function pages(){
+ const g=s.a.group,tch=g==='現職教員',P=g&&route()==='P',R=g?route():'T';
+ const ks=a=>()=>a.every(k=>s.a[k]),gr=k=>()=>(s.r[k]||[]).filter(Boolean).length===DEF[k].length;
+ const ch=q('child','お子さんはいますか',OPT.child);
+ return [
+ {h:'<h2>あなたについて</h2>'+q('age','年代',OPT.age)+q('gender','性別',OPT.gender)+q('partner','パートナー（配偶者・交際相手）',OPT.partner)+q('group','所属',OPT.group),ok:ks(['age','gender','partner','group'])},
+ stu()?{h:'<h2>あなたについて（学生）</h2>'+q('aspire','将来、教員（幼稚園・保育所等を含む）を目指していますか',['目指している','迷っている','目指していない'])+q('practicum','教育実習',['終えている','まだ終えていない','教職課程を履修していない'])+ch,ok:ks(['aspire','practicum','child'])}
+ :tch?{h:'<h2>あなたについて（現職教員）</h2>'+q('years','教職経験年数',['3年以下','4〜10年','11〜20年','21年以上'])+ch,ok:ks(['years','child'])}
+ :{h:'<h2>あなたについて</h2>'+q('contact','子どもと関わる頻度',['ほぼ毎日','週に数回','月に数回','ほとんどない'])+q('contactJob','仕事・活動として子どもと関わっていますか（保育・塾・習い事・学童・ボランティアなど）',['はい','いいえ'])+ch,ok:ks(['contact','contactJob','child'])},
+ {h:grid('cog','子どもについて',P),ok:gr('cog')},
+ {h:grid('se',P?'現在の子育てについて':'もし将来、幼い子ども（3〜6歳ごろ）を育てるとしたら',P),ok:gr('se')},
+ {h:grid('sup','周りの支援について',P),ok:gr('sup')},
+ {h:grid('bir','子どもを持つことについて',P)+q('nin',P?'今後さらに持ちたい子どもの人数':'希望する子どもの人数',P?NINP:NINF)+q('jiki',P?'今後さらに子どもを持つとしたら、その時期':R==='S'?'社会人になってから、最初の子どもを持ちたい時期':'今から、最初の子どもを持ちたい時期',P?JIP:JIF),ok:()=>gr('bir')()&&ks(['nin','jiki'])()}];
+}
+document.addEventListener('change',e=>{const n=e.target.name;if(n.startsWith('g:')){const[,k,j]=n.split(':');(s.r[k]=s.r[k]||[])[+j]=+e.target.value}else s.a[n]=e.target.value});
+function intro(){$('app').innerHTML=`<h1>子どもとのかかわりタイプ診断</h1><div class="c"><p>卒業論文のための調査です（所要時間：約5分）。回答すると、あなたのタイプが結果として表示されます。</p><ul><li>18歳以上の方が対象です</li><li>匿名で、個人は特定されません</li><li>回答は統計的に処理し、卒業論文の目的にのみ使います</li><li>やめたい場合は、送信せずにページを閉じてください</li><li>結果は楽しみのためのもので、診断ではありません</li></ul><p class="m">研究者：大阪大谷大学 教育学部 学校教育専攻 清水恒輝（指導教員：後藤壮史）<br>連絡先：${CONTACT}</p></div><div class="nav"><button class="s" onclick="no()">同意しない</button><button onclick="s.p=0;show()">18歳以上で、同意して始める</button></div>`}
+const no=()=>{$('app').innerHTML='<h1>ご協力ありがとうございました</h1><p>回答は送信されていません。このページは閉じて大丈夫です。</p>'};
+function show(){const L=pages();$('app').innerHTML=`<div class="bar"><i style="width:${(s.p+1)/(L.length+1)*100}%"></i></div>${L[s.p].h}<div class="err" id="er"></div><div class="nav"><button class="s" onclick="go(-1)">戻る</button><button onclick="go(1)">${s.p===L.length-1?'送信して結果を見る':'次へ'}</button></div>`;scrollTo(0,0)}
+function go(d){const L=pages();if(d>0&&!L[s.p].ok()){$('er').textContent='答えていない項目があります。';return}s.p+=d;if(s.p<0)intro();else if(s.p>=L.length)fin();else show()}
+function typeOf(sc){if(Math.max(...sc)<3)return'x';const o=sc.map((v,i)=>[v-AX[i][3],i]).sort((a,b)=>b[0]-a[0]);return o[0][1]+'-'+o[1][1]}
+const nameOf=k=>k==='x'?'のびしろいっぱいタイプ':AX[+k.split('-')[1]][2]+AX[+k.split('-')[0]][1]+'タイプ';
+let payload=null,KEY='';
+function fin(){
+ const sc=AXI.map(([k,a,b])=>mean(s.r[k].slice(a,b))),R=route(),g=s.a.group;KEY=typeOf(sc);
+ const keep=['age','gender','partner','group','child','nin','jiki'].concat(stu()?['aspire','practicum']:g==='現職教員'?['years']:['contact','contactJob']),a={};keep.forEach(k=>a[k]=s.a[k]);
+ const G=s.a.child==='いる'?'F':g==='現職教員'?'C':g==='他学部の学生'?'D':g==='教育学部の学生'?(s.a.practicum==='終えている'?'A':'B'):'E';
+ payload={a,g:G,route:R,r:{cog:[...s.r.cog],se:[...s.r.se],sup:[...s.r.sup],bir:[...s.r.bir]},t:KEY};
+ result(sc);send()}
+function card(sc){
+ const cx=200,cy=250,Rr=105,pt=(i,v)=>{const t=(-90+i*72)*Math.PI/180,r=(v-1)/5*Rr;return[cx+r*Math.cos(t),cy+r*Math.sin(t)]};
+ const poly=v=>AX.map((_,i)=>pt(i,v).map(n=>n.toFixed(1)).join(',')).join(' ');
+ const lab=AX.map((x,i)=>{const[X,Y]=pt(i,7.2),c=Math.cos((-90+i*72)*Math.PI/180);return`<text x="${X.toFixed(1)}" y="${(Y+4).toFixed(1)}" font-size="13" text-anchor="${Math.abs(c)<.3?'middle':c>0?'start':'end'}" fill="#1f2d3a">${x[4]}</text>`}).join('');
+ const mine=sc.map((v,i)=>pt(i,Math.max(1,v)).map(n=>n.toFixed(1)).join(',')).join(' ');
+ return`<svg id="card" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 450" width="400" height="450" font-family="sans-serif"><rect width="400" height="450" fill="#fff"/><text x="200" y="38" font-size="13" text-anchor="middle" fill="#6b7a89">あなたのタイプ</text><text x="200" y="74" font-size="22" font-weight="700" text-anchor="middle" fill="#1f2d3a">${nameOf(KEY)}</text>${[2,3,4,5,6].map(v=>`<polygon points="${poly(v)}" fill="none" stroke="#c9d6e2"/>`).join('')}<polygon points="${mine}" fill="#f0b429" fill-opacity=".55" stroke="#d99a10" stroke-width="2.5"/>${lab}<text x="200" y="436" font-size="11" text-anchor="middle" fill="#6b7a89">子どもとのかかわりタイプ診断</text></svg>`}
+function result(sc){$('app').innerHTML=`<h1>あなたの結果</h1>${card(sc)}<p id="share" class="m">${GAS?'回答を送信しています…':'（テスト表示：まだ保存されていません）'}</p><div class="c">${AX.map((x,i)=>`<p><b>${x[0]}</b><br>${sc[i]>=4?x[5]:x[6]}</p>`).join('')}</div><div class="nav"><button onclick="savePng()">画像で保存する</button></div><p class="m">この結果は楽しみのためのもので、診断ではありません。ご協力ありがとうございました。</p>`;scrollTo(0,0)}
+async function send(){
+ if(!GAS)return;const el=$('share');
+ try{const j=await(await fetch(GAS,{method:'POST',body:JSON.stringify(payload)})).json();if(!j.ok)throw 0;
+  el.textContent=j.total>=30?`同じタイプの人は、これまでの回答者${j.total}人のうち${Math.max(1,Math.round((j.counts[KEY]||0)/j.total*100))}％です。`:'回答を送信しました。回答が集まると「同じタイプの人の割合」が表示されます。'}
+ catch(e){el.innerHTML='送信できませんでした。 <button class="s" onclick="send()">もう一度送る</button>'}}
+function savePng(){const x=new XMLSerializer().serializeToString($('card')),im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=800;c.height=900;const t=c.getContext('2d');t.fillStyle='#fff';t.fillRect(0,0,800,900);t.drawImage(im,0,0,800,900);c.toBlob(b=>{const l=document.createElement('a');l.href=URL.createObjectURL(b);l.download='type.png';l.click()})};im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(x)}
+intro();
+</script></body></html>
