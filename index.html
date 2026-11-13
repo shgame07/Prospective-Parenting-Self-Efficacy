@@ -14,16 +14,18 @@ label{border:1.5px solid #c5d2de;border-radius:999px;padding:6px 14px;cursor:poi
 .sc label{padding:8px 0;border-radius:10px}input{position:absolute;opacity:0}
 label:has(input:checked){background:var(--tl);color:#fff;border-color:var(--tl)}
 label:has(input:focus-visible){outline:3px solid var(--ac)}
-.ends{display:flex;justify-content:space-between;font-size:.75rem;color:var(--mut);margin-top:4px}
+.lg{position:sticky;top:0;z-index:2;background:var(--bg);display:grid;grid-template-columns:repeat(3,1fr);gap:2px 6px;font-size:.7rem;color:var(--mut);padding:8px 0;border-bottom:1px solid #dbe4ec}.cap{font-size:.8rem;color:var(--tl);margin-top:4px;min-height:1.3em}
 button{font:inherit;border:0;border-radius:999px;padding:12px 24px;background:var(--ink);color:#fff;cursor:pointer}
 button.s{background:none;color:var(--ink);border:1.5px solid var(--ink)}
 .nav{display:flex;gap:10px;justify-content:space-between;margin-top:16px}.err{color:#b4412f;min-height:1.6em}
 #card{width:100%;height:auto;border-radius:14px;border:1px solid #dbe4ec}
 </style></head><body><main id="app"></main>
 <script>
-const GAS='';// ← GASのWebアプリURLを貼る
+const GAS='https://script.google.com/macros/s/AKfycbyE3PPTDVMWiNXchG3oeKo1YnVaZqExPlZOOn086HKxHcymNn-nm1gBIMuuEA7KCTltyw/exec';
 const CONTACT='（ここに連絡先メールアドレスを入力）';
-const LAB=['まったくそう思わない','非常にそう思う'];
+const LABS=['まったくそう思わない','そう思わない','あまりそう思わない','ややそう思う','そう思う','非常にそう思う'];
+const LG=`<div class="lg">${LABS.map((t,i)=>`<span>${i+1} ${t}</span>`).join('')}</div>`;
+const CAP=(k,j)=>{const v=(s.r[k]||[])[j];return v?`${v} ${LABS[v-1]}`:'1〜6から選んでください'};
 const COG=['子どもと関わるのは楽しい','子どもの成長を見守ることにやりがいを感じる','子どもと接していると気持ちが和らぐ','子どもの年齢ごとの発達の特徴を、おおよそ理解している','子どもがつまずきやすい場面を予想できる','子どもへの声かけや対応の仕方に見通しがある'];
 const SE=[['子どもとしっかり遊んで、気持ちを満足させられると思う','子どもとしっかり遊んで、気持ちを満足させられる'],['子どもから、よく遊んでくれる楽しい親だと思ってもらえると思う','子どもは、私をよく遊んでくれる楽しい親だと思っている'],['子どもの年齢に合った遊びを、いろいろ教えてあげられると思う','子どもの年齢に合った遊びを、いろいろ教えてあげられる'],['子どもがまねできる良いお手本を見せられると思う','子どもがまねできる良いお手本を見せられる'],['子どもが自信をもてるように、良い所をほめられると思う','子どもが自信をもてるように、良い所をほめられる'],['子どもがぐずった時に、なだめられると思う','子どもがぐずった時に、なだめられる'],['子どもが不安そうな時、言葉をかけて安心させられると思う','子どもが不安そうな時、言葉をかけて安心させられる']];
 const SUP=['困ったときは、周囲の人に助けを求めてよいと思う','他の人に助けを求めることに、あまり抵抗はない','子育てで困ったとき、相談できる人が身近にいると思う','周囲の人は、子育てをしていることに理解を示してくれると思う','育児休業など、子育てに関する制度は積極的に利用したいと思う','子育ての悩みは、専門家（保育士・医師・相談窓口など）に相談したいと思う'];
@@ -39,7 +41,7 @@ const s={a:{},r:{},p:0},$=id=>document.getElementById(id);
 const sh=(n,seed)=>{const a=[...Array(n).keys()];let t=seed;const r=()=>(t=(t*1664525+1013904223)>>>0)/4294967296;for(let i=n-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
 const q=(k,t,o)=>`<div class="q c"><p>${t}</p><div class="ch">${o.map(v=>`<label><input type="radio" name="${k}" value="${v}"${s.a[k]===v?' checked':''}>${v}</label>`).join('')}</div></div>`;
-const grid=(k,t,P)=>`<h2>${t}</h2>`+sh(DEF[k].length,SEED[k]).map(j=>{const x=DEF[k][j];return `<div class="q c"><p>${P&&x[1]?x[1]:x[0]}</p><div class="sc">${[1,2,3,4,5,6].map(v=>`<label><input type="radio" name="g:${k}:${j}" value="${v}"${(s.r[k]||[])[j]===v?' checked':''}>${v}</label>`).join('')}</div><div class="ends"><span>${LAB[0]}</span><span>${LAB[1]}</span></div></div>`}).join('');
+const grid=(k,t,P)=>`<h2>${t}</h2>${LG}`+sh(DEF[k].length,SEED[k]).map(j=>{const x=DEF[k][j];return `<div class="q c"><p>${P&&x[1]?x[1]:x[0]}</p><div class="sc">${[1,2,3,4,5,6].map(v=>`<label><input type="radio" name="g:${k}:${j}" value="${v}"${(s.r[k]||[])[j]===v?' checked':''}>${v}</label>`).join('')}</div><div class="cap" id="cap:${k}:${j}">${CAP(k,j)}</div></div>`}).join('');
 const stu=()=>['教育学部の学生','他学部の学生'].includes(s.a.group);
 const route=()=>s.a.child==='いる'?'P':stu()?'S':'T';
 function pages(){
@@ -56,7 +58,7 @@ function pages(){
  {h:grid('sup','周りの支援について',P),ok:gr('sup')},
  {h:grid('bir','子どもを持つことについて',P)+q('nin',P?'今後さらに持ちたい子どもの人数':'希望する子どもの人数',P?NINP:NINF)+q('jiki',P?'今後さらに子どもを持つとしたら、その時期':R==='S'?'社会人になってから、最初の子どもを持ちたい時期':'今から、最初の子どもを持ちたい時期',P?JIP:JIF),ok:()=>gr('bir')()&&ks(['nin','jiki'])()}];
 }
-document.addEventListener('change',e=>{const n=e.target.name;if(n.startsWith('g:')){const[,k,j]=n.split(':');(s.r[k]=s.r[k]||[])[+j]=+e.target.value}else s.a[n]=e.target.value});
+document.addEventListener('change',e=>{const n=e.target.name;if(n.startsWith('g:')){const[,k,j]=n.split(':');(s.r[k]=s.r[k]||[])[+j]=+e.target.value;const c=$(`cap:${k}:${j}`);if(c)c.textContent=CAP(k,+j)}else s.a[n]=e.target.value});
 function intro(){$('app').innerHTML=`<h1>子どもとのかかわりタイプ診断</h1><div class="c"><p>卒業論文のための調査です（所要時間：約5分）。回答すると、あなたのタイプが結果として表示されます。</p><ul><li>18歳以上の方が対象です</li><li>匿名で、個人は特定されません</li><li>回答は統計的に処理し、卒業論文の目的にのみ使います</li><li>やめたい場合は、送信せずにページを閉じてください</li><li>結果は楽しみのためのもので、診断ではありません</li></ul><p class="m">研究者：大阪大谷大学 教育学部 学校教育専攻 清水恒輝（指導教員：後藤壮史）<br>連絡先：${CONTACT}</p></div><div class="nav"><button class="s" onclick="no()">同意しない</button><button onclick="s.p=0;show()">18歳以上で、同意して始める</button></div>`}
 const no=()=>{$('app').innerHTML='<h1>ご協力ありがとうございました</h1><p>回答は送信されていません。このページは閉じて大丈夫です。</p>'};
 function show(){const L=pages();$('app').innerHTML=`<div class="bar"><i style="width:${(s.p+1)/(L.length+1)*100}%"></i></div>${L[s.p].h}<div class="err" id="er"></div><div class="nav"><button class="s" onclick="go(-1)">戻る</button><button onclick="go(1)">${s.p===L.length-1?'送信して結果を見る':'次へ'}</button></div>`;scrollTo(0,0)}
