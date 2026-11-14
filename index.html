@@ -82,7 +82,7 @@ function result(sc){$('app').innerHTML=`<h1>あなたの結果</h1>${card(sc)}<p
 async function send(){
  if(!GAS)return;const el=$('share');
  try{const j=await(await fetch(GAS,{method:'POST',body:JSON.stringify(payload)})).json();if(!j.ok)throw 0;
-  el.textContent=j.total>=30?`同じタイプの人は、これまでの回答者${j.total}人のうち${Math.max(1,Math.round((j.counts[KEY]||0)/j.total*100))}％です。`:'回答を送信しました。回答が集まると「同じタイプの人の割合」が表示されます。'}
+  el.textContent=j.total>=10?`同じタイプの人は、これまでの回答者${j.total}人のうち${Math.max(1,Math.round((j.counts[KEY]||0)/j.total*100))}％です。`:'回答を送信しました。回答が集まると「同じタイプの人の割合」が表示されます。'}
  catch(e){el.innerHTML='送信できませんでした。 <button class="s" onclick="send()">もう一度送る</button>'}}
 function savePng(){const x=new XMLSerializer().serializeToString($('card')),im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=800;c.height=900;const t=c.getContext('2d');t.fillStyle='#fff';t.fillRect(0,0,800,900);t.drawImage(im,0,0,800,900);c.toBlob(b=>{const l=document.createElement('a');l.href=URL.createObjectURL(b);l.download='type.png';l.click()})};im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(x)}
 intro();
